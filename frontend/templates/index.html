@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR AI Assistant</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HR AI Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div class="container">
-        <div class="chat-box">
-            <div class="input-area">
-                <h1>Ask the HR Expert</h1>
-                <textarea id="user-input" placeholder="Type your question here..."></textarea>
-                <button onclick="submitPrompt()">Submit</button>
-                <div id="response"></div>
-            </div>
-            <div class="avatar">👩🏽‍💼</div>
+  <div class="page-container">
+
+    <!-- Ava centered vertically -->
+    <div class="avatar-wrapper">
+      <div class="vignette-frame">
+        <div class="avatar-content">
+          <img src="{{ url_for('static', filename='img/HR_ASSISTANT.jpg') }}" alt="HR Manager" class="hr-avatar">
+          <div class="assistant-name">Hi, I'm Ava, your AI HR Expert. What can I assist you with today?</div>
         </div>
+      </div>
     </div>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Chat Input fixed at bottom -->
+    <div class="chat-input">
+      <textarea id="user-input" placeholder="Type your question here..."></textarea>
+      <button onclick="submitPrompt()">Submit</button>
+    </div>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

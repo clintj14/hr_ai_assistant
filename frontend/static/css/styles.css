@@ -116,13 +116,33 @@ body {
 
 /* Chat Response */
 .chat-response {
-  padding: 20px;
+  padding: 24px;
   font-size: 1rem;
-  font-family: 'San Francisco', sans-serif;
-  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco",
+               "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.8;
   color: white;
   max-width: 800px;
-  margin: 0 auto;
-  margin-bottom: 100px;
+  margin: 0 auto 120px;
+  white-space: pre-line; /* <- enables newline formatting */
+}
+
+/* Optional: format bold lines as "headings" */
+.chat-response strong {
+  display: block;
+  font-weight: bold;
+  margin-top: 1.2em;
+  margin-bottom: 0.3em;
+  font-size: 1.05rem;
+}
+
+/* Optional: stylize numbered or bulleted lists */
+.chat-response ol, .chat-response ul {
+  margin-left: 1.5em;
+  padding-left: 0.5em;
+}
+
+.chat-response li {
+  margin-bottom: 0.6em;
 }
 

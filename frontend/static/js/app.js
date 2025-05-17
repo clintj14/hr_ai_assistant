@@ -1,24 +1,31 @@
 async function submitPrompt() {
-    const userInput = document.getElementById('user-input').value;
-    const responseDiv = document.getElementById('response');
-    responseDiv.innerHTML = 'Thinking...';
+  const userInput = document.getElementById('user-input').value;
+  const responseDiv = document.getElementById('response');
+  const avatarWrapper = document.getElementById('avatar-wrapper');
 
-    try {
-        const res = await fetch('/ask', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: userInput })
-        });
+  if (!userInput.trim()) return;
 
-        const data = await res.json();
-        const words = data.response.split(' ');
-        responseDiv.innerHTML = '';
+  responseDiv.innerHTML = 'Thinking...';
 
-        for (let i = 0; i < words.length; i++) {
-            responseDiv.innerHTML += words[i] + ' ';
-            await new Promise(resolve => setTimeout(resolve, 50));  // 50ms delay
-        }
-    } catch (err) {
-        responseDiv.innerHTML = 'Error retrieving response.';
+  try {
+    const res = await fetch('/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: userInput })
+    });
+
+    const data = await res.json();
+    const words = data.response.split(' ');
+    responseDiv.innerHTML = '';
+
+    // Shrink and move avatar
+    avatarWrapper.classList.add('minimized');
+
+    for (let i = 0; i < words.length; i++) {
+      responseDiv.innerHTML += words[i] + ' ';
+      await new Promise(resolve => setTimeout(resolve, 40));  // faster typing
     }
+  } catch (err) {
+    responseDiv.innerHTML = 'Error retrieving response.';
+  }
 }

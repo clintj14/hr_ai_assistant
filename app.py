@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from backend.llm import llm_prompt
+import os
 
 app = Flask(__name__, template_folder='frontend/templates', static_folder='frontend/static')
 
@@ -18,4 +19,5 @@ def ask():
     return jsonify({'response': response})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

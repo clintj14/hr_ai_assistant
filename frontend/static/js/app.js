@@ -5,6 +5,12 @@ async function submitPrompt() {
 
   if (!userInput.trim()) return;
 
+  // ✅ Hide initial greeting
+  const greeting = document.getElementById('assistant-greeting');
+  if (greeting) {
+    greeting.style.display = 'none';
+  }
+
   responseDiv.innerHTML = 'Thinking...';
 
   try {
@@ -18,12 +24,12 @@ async function submitPrompt() {
     const words = data.response.split(' ');
     responseDiv.innerHTML = '';
 
-    // Shrink and move avatar
+    // Shrink/move avatar
     avatarWrapper.classList.add('minimized');
 
     for (let i = 0; i < words.length; i++) {
       responseDiv.innerHTML += words[i] + ' ';
-      await new Promise(resolve => setTimeout(resolve, 40));  // faster typing
+      await new Promise(resolve => setTimeout(resolve, 40));
     }
   } catch (err) {
     responseDiv.innerHTML = 'Error retrieving response.';

@@ -1,50 +1,72 @@
 async function submitPrompt() {
-  const userInput = document.getElementById('user-input').value;
-  const responseDiv = document.getElementById('response');
-  const avatarWrapper = document.getElementById('avatar-wrapper');
-  const greeting = document.getElementById('assistant-greeting');
+  const userInputElement = document.getElementById("user-input");
+  const responseDiv = document.getElementById("response");
+  const avatarWrapper = document.getElementById("avatar-wrapper");
+  const greeting = document.getElementById("assistant-greeting");
 
-  if (!userInput.trim()) return;
+  const userInput = userInputElement.value.trim();
+  if (!userInput) return;
 
-  // Hide initial greeting
-  if (greeting) {
-    greeting.style.display = 'none';
-  }
-
-  // Show loading state
-  responseDiv.innerHTML = 'Thinking...';
+  if (greeting) greeting.style.display = "none";
+  userInputElement.value = "";
+  responseDiv.innerHTML = "Thinking...";
 
   try {
-    // Send user input to backend
-    const res = await fetch('/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: userInput })
     });
 
     const data = await res.json();
+    const raw = data.response.replace(/\r\n/g, "\n").trim();
+    const lines = raw.split("\n");
+    const merged = [];
 
-    // Format response with simple markdown-like formatting
-    let formattedHtml = data.response
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold section titles
-      .replace(/\n{2,}/g, '<br><br>')                    // Paragraph breaks
-      .replace(/\n/g, '<br>');                           // Single line breaks
+    for (let i = 0; i < lines.length; i++) {
+      const cur = lines[i].trim();
 
-    // Move avatar to corner
-    avatarWrapper.classList.add('minimized');
+      if (/^\d+\.$/.test(cur)) {
+        const stepNum = cur.replace(".", "");
 
-    // Clear placeholder
-    responseDiv.innerHTML = '';
+        // Next non-empty line is heading
+        let j = i + 1;
+        while (j < lines.length && !lines[j].trim()) j++;
+        const heading = lines[j]?.trim() || "";
 
-    // Typing animation — word by word
-    const words = formattedHtml.split(' ');
-    for (let i = 0; i < words.length; i++) {
-      responseDiv.innerHTML += words[i] + ' ';
-      await new Promise(resolve => setTimeout(resolve, 40)); // Typing speed
+        // Next non-empty line is subtitle
+        let k = j + 1;
+        while (k < lines.length && !lines[k].trim()) k++;
+        const subtitle = lines[k]?.trim() || "";
+
+        // Merge into one span-tagged heading
+        const fullHeading = `${stepNum}. ${heading}${subtitle ? " " + subtitle : ""}`;
+        merged.push(`<span class="step-heading">${fullHeading}</span>`);
+        i = k;
+      } else {
+        merged.push(cur);
+      }
     }
 
+    const mergedRaw = merged.join("\n");
+
+    // Convert final line breaks to HTML
+    let html = mergedRaw
+      .replace(/\n{2,}/g, "<br><br>")
+      .replace(/\n/g, "<br>")
+      .replace(/\*\*/g, ""); // just in case: remove stray **
+
+    // Apply animation
+    avatarWrapper.classList.add("minimized");
+    responseDiv.innerHTML = "";
+
+    const words = html.split(" ");
+    for (let w of words) {
+      responseDiv.innerHTML += w + " ";
+      await new Promise((r) => setTimeout(r, 40));
+    }
   } catch (err) {
-    responseDiv.innerHTML = 'Error retrieving response.';
     console.error(err);
+    responseDiv.innerHTML = "Error retrieving response.";
   }
 }

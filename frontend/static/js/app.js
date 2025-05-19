@@ -1,72 +1,105 @@
+let chatMemory = [];
+
+function formatTime() {
+  const now = new Date();
+  return now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function appendMessage(content, type) {
+  const chatHistory = document.getElementById("chat-history");
+
+  const bubble = document.createElement("div");
+  bubble.className = `chat-bubble ${type}-message`;
+
+  const time = document.createElement("span");
+  time.className = "timestamp";
+  time.textContent = formatTime();
+
+  bubble.innerHTML = content;
+  bubble.appendChild(time);
+  chatHistory.appendChild(bubble);
+
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
 async function submitPrompt() {
   const userInputElement = document.getElementById("user-input");
-  const responseDiv = document.getElementById("response");
-  const avatarWrapper = document.getElementById("avatar-wrapper");
+  const chatHistory = document.getElementById("chat-history");
+  const userText = userInputElement.value.trim();
   const greeting = document.getElementById("assistant-greeting");
 
-  const userInput = userInputElement.value.trim();
-  if (!userInput) return;
-
+  if (!userText) return;
   if (greeting) greeting.style.display = "none";
+
   userInputElement.value = "";
-  responseDiv.innerHTML = "Thinking...";
+
+  // Show user message
+  chatMemory.push({ role: "user", content: userText });
+  appendMessage(userText, "user");
+
+  // Placeholder AI message
+  const aiBubble = document.createElement("div");
+  aiBubble.className = "chat-bubble ai-message";
+  aiBubble.innerHTML = "Thinking...";
+  chatHistory.appendChild(aiBubble);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
 
   try {
     const res = await fetch("/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: userInput })
+      body: JSON.stringify({ prompt: userText })
     });
 
     const data = await res.json();
     const raw = data.response.replace(/\r\n/g, "\n").trim();
-    const lines = raw.split("\n");
-    const merged = [];
 
-    for (let i = 0; i < lines.length; i++) {
-      const cur = lines[i].trim();
+  let html = raw
+    .replace(/\r\n/g, "\n")
 
-      if (/^\d+\.$/.test(cur)) {
-        const stepNum = cur.replace(".", "");
+    // Convert ### headings to section titles
+    .replace(/^###\s+(.*)$/gm, '<div class="section-heading">$1</div>')
 
-        // Next non-empty line is heading
-        let j = i + 1;
-        while (j < lines.length && !lines[j].trim()) j++;
-        const heading = lines[j]?.trim() || "";
+    // Format numbered steps by bolding the full line up to the colon
+    .replace(/^(\d+\.\s+[^:\n]+:)/gm, "<strong>$1</strong>")
 
-        // Next non-empty line is subtitle
-        let k = j + 1;
-        while (k < lines.length && !lines[k].trim()) k++;
-        const subtitle = lines[k]?.trim() || "";
+    // Standard bold markdown
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
 
-        // Merge into one span-tagged heading
-        const fullHeading = `${stepNum}. ${heading}${subtitle ? " " + subtitle : ""}`;
-        merged.push(`<span class="step-heading">${fullHeading}</span>`);
-        i = k;
-      } else {
-        merged.push(cur);
-      }
-    }
+    // Convert line breaks
+    .replace(/\n{2,}/g, "<br><br>")
+    .replace(/\n/g, "<br>");
 
-    const mergedRaw = merged.join("\n");
 
-    // Convert final line breaks to HTML
-    let html = mergedRaw
-      .replace(/\n{2,}/g, "<br><br>")
-      .replace(/\n/g, "<br>")
-      .replace(/\*\*/g, ""); // just in case: remove stray **
 
-    // Apply animation
-    avatarWrapper.classList.add("minimized");
-    responseDiv.innerHTML = "";
-
+    aiBubble.innerHTML = "";
     const words = html.split(" ");
-    for (let w of words) {
-      responseDiv.innerHTML += w + " ";
-      await new Promise((r) => setTimeout(r, 40));
+    for (let word of words) {
+      aiBubble.innerHTML += word + " ";
+      await new Promise((r) => setTimeout(r, 30));
     }
+
+    const time = document.createElement("span");
+    time.className = "timestamp";
+    time.textContent = formatTime();
+    aiBubble.appendChild(time);
+
+    chatMemory.push({ role: "assistant", content: data.response });
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
   } catch (err) {
+    aiBubble.textContent = "Something went wrong.";
     console.error(err);
-    responseDiv.innerHTML = "Error retrieving response.";
   }
 }
+
+// // Optional: Persist chat on refresh
+// window.addEventListener("DOMContentLoaded", () => {
+//   const history = JSON.parse(localStorage.getItem("chatMemory")) || [];
+//   chatMemory = history;
+//   history.forEach(msg => appendMessage(msg.content, msg.role));
+// });
+//
+// window.addEventListener("beforeunload", () => {
+//   localStorage.setItem("chatMemory", JSON.stringify(chatMemory));
+// });
